@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember & Oak — Restaurant</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --cream: #F5EFE0;
+    --dark: #1A1410;
+    --brown: #3D2B1F;
+    --gold: #C8963E;
+    --gold-light: #E8B96A;
+    --rust: #8B4513;
+    --muted: #7A6A5A;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'Jost', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.5rem 4rem;
+    background: linear-gradient(to bottom, rgba(26,20,16,0.95), transparent);
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+  }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    transition: opacity 0.3s, color 0.3s;
+  }
+  .nav-links a:hover { opacity: 1; color: var(--gold-light); }
+  .nav-reserve {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.6rem 1.5rem;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-reserve:hover { background: var(--gold); color: var(--dark); }
+
+  /* HERO */
+  .hero {
+    height: 100vh;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse at 60% 40%, rgba(200,150,62,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 80%, rgba(139,69,19,0.15) 0%, transparent 50%),
+      linear-gradient(135deg, #0D0A07 0%, #1A1410 50%, #0F0C09 100%);
+  }
+  .hero-texture {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+  .hero-line-left {
+    position: absolute; left: 4rem; top: 50%;
+    transform: translateY(-50%);
+    width: 1px; height: 30vh;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+  .hero-line-right {
+    position: absolute; right: 4rem; top: 50%;
+    transform: translateY(-50%);
+    width: 1px; height: 30vh;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    text-align: center;
+    animation: fadeUp 1.2s ease forwards;
+    opacity: 0;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+  }
+  .hero-tag::before, .hero-tag::after {
+    content: '';
+    display: block; width: 40px; height: 1px;
+    background: var(--gold); opacity: 0.6;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 10vw, 8rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.2em;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold-light);
+    display: block;
+  }
+  .hero-subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--muted);
+    margin: 1.5rem 0 2.5rem;
+    letter-spacing: 0.05em;
+  }
+  .hero-cta {
+    display: inline-flex; gap: 1rem; align-items: center;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 1rem 2.5rem;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+  .btn-ghost {
+    color: var(--cream);
+    border: none; background: none;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-ghost::after { content: '→'; font-size: 1rem; }
+  .btn-ghost:hover { opacity: 1; }
+  .hero-scroll {
+    position: absolute; bottom: 2rem; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--muted); opacity: 0.6;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+  .hero-scroll::after {
+    content: ''; display: block;
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+  }
+
+  /* ABOUT */
+  .about {
+    padding: 8rem 4rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6rem;
+    align-items: center;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .about-image-wrap {
+    position: relative;
+  }
+  .about-image {
+    width: 100%; aspect-ratio: 4/5;
+    background: linear-gradient(135deg, #2A1F15, #3D2B1F);
+    position: relative; overflow: hidden;
+  }
+  .about-image::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(circle at 30% 40%, rgba(200,150,62,0.2), transparent 60%),
+      linear-gradient(180deg, transparent 40%, rgba(26,20,16,0.6));
+  }
+  .about-image-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 5rem; opacity: 0.15; color: var(--gold);
+  }
+  .about-image-frame {
+    position: absolute;
+    top: -1rem; left: -1rem; right: 1rem; bottom: 1rem;
+    border: 1px solid rgba(200,150,62,0.3);
+    pointer-events: none;
+  }
+  .about-badge {
+    position: absolute; bottom: -2rem; right: -2rem;
+    width: 100px; height: 100px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--dark);
+  }
+  .about-badge-year { font-size: 1.4rem; font-weight: 600; line-height: 1; }
+  .about-badge-text { font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; }
+  .section-tag {
+    font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+  .section-tag::before {
+    content: ''; display: block;
+    width: 30px; height: 1px; background: var(--gold);
+  }
+  .about-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: 300; line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+  .about-title em { font-style: italic; color: var(--gold-light); }
+  .about-text {
+    color: var(--muted); line-height: 1.8;
+    font-size: 0.95rem; margin-bottom: 1.5rem;
+  }
+  .about-stats {
+    display: flex; gap: 2rem; margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(200,150,62,0.2);
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 2.5rem; font-weight: 300;
+    color: var(--gold-light); line-height: 1;
+    margin-bottom: 0.2rem;
+  }
+  .stat-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+
+  /* MENU */
+  .menu-section {
+    padding: 6rem 4rem;
+    background: linear-gradient(180deg, var(--dark) 0%, #0F0C09 100%);
+  }
+  .section-header {
+    text-align: center; margin-bottom: 4rem;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 300; line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .section-title em { font-style: italic; color: var(--gold-light); }
+  .section-sub {
+    font-family: var(--font-display);
+    font-style: italic; font-size: 1.1rem;
+    color: var(--muted);
+  }
+  .menu-tabs {
+    display: flex; justify-content: center; gap: 0; margin-bottom: 3rem;
+    border-bottom: 1px solid rgba(200,150,62,0.2);
+    max-width: 600px; margin: 0 auto 3rem;
+  }
+  .menu-tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 0.8rem 2rem;
+    font-family: var(--font-body); font-size: 0.75rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: -1px;
+  }
+  .menu-tab.active, .menu-tab:hover {
+    color: var(--gold); border-bottom-color: var(--gold);
+  }
+  .menu-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5px;
+    max-width: 1100px; margin: 0 auto;
+    background: rgba(200,150,62,0.1);
+    border: 1px solid rgba(200,150,62,0.1);
+  }
+  .menu-item {
+    background: #120E0B;
+    padding: 2rem;
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .menu-item:hover { background: #1A1410; }
+  .menu-item-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+  .menu-item-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem; font-weight: 400;
+    line-height: 1.2; max-width: 70%;
+  }
+  .menu-item-price {
+    font-family: var(--font-display);
+    font-size: 1.1rem; color: var(--gold);
+    white-space: nowrap;
+  }
+  .menu-item-desc {
+    font-size: 0.8rem; color: var(--muted);
+    line-height: 1.6;
+  }
+  .menu-item-tag {
+    display: inline-block; margin-top: 0.8rem;
+    font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+    background: rgba(200,150,62,0.15);
+    color: var(--gold); padding: 3px 8px;
+  }
+
+  /* ATMOSPHERE */
+  .atmosphere {
+    padding: 6rem 4rem;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: rgba(200,150,62,0.08);
+  }
+  .atm-block {
+    background: var(--dark);
+    padding: 3rem;
+    display: flex; flex-direction: column;
+    min-height: 350px;
+    position: relative; overflow: hidden;
+  }
+  .atm-block-accent {
+    background: linear-gradient(135deg, #2A1F15 0%, #1A1410 100%);
+  }
+  .atm-number {
+    font-family: var(--font-display);
+    font-size: 6rem; font-weight: 300;
+    line-height: 1; color: rgba(200,150,62,0.12);
+    position: absolute; bottom: 1rem; right: 1.5rem;
+  }
+  .atm-icon { font-size: 2rem; margin-bottom: 1.5rem; opacity: 0.8; }
+  .atm-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem; font-weight: 300; margin-bottom: 1rem;
+  }
+  .atm-text { font-size: 0.85rem; color: var(--muted); line-height: 1.8; }
+
+  /* RESERVE */
+  .reserve-section {
+    padding: 8rem 4rem;
+    max-width: 700px; margin: 0 auto;
+    text-align: center;
+  }
+  .reserve-section .section-title { margin-bottom: 0.5rem; }
+  .reserve-form {
+    margin-top: 3rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: rgba(200,150,62,0.15);
+    border: 1px solid rgba(200,150,62,0.15);
+  }
+  .reserve-form input, .reserve-form select {
+    background: #0F0C09;
+    border: none; outline: none;
+    padding: 1.2rem 1.5rem;
+    color: var(--cream);
+    font-family: var(--font-body); font-size: 0.85rem;
+    font-weight: 300;
+    width: 100%;
+  }
+  .reserve-form select option { background: #1A1410; }
+  .reserve-form input::placeholder { color: var(--muted); }
+  .reserve-form .full { grid-column: 1 / -1; }
+  .reserve-form input:focus, .reserve-form select:focus {
+    background: #1A1410;
+  }
+  .reserve-submit {
+    grid-column: 1 / -1;
+    background: var(--gold);
+    border: none;
+    padding: 1.3rem;
+    color: var(--dark);
+    font-family: var(--font-body); font-size: 0.8rem;
+    font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .reserve-submit:hover { background: var(--gold-light); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid rgba(200,150,62,0.15);
+    padding: 3rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: 0.75rem; letter-spacing: 0.1em;
+  }
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 1.3rem; color: var(--gold); letter-spacing: 0.15em;
+  }
+  .footer-links { display: flex; gap: 2rem; }
+  .footer-links a { color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .footer-links a:hover { color: var(--gold); }
+
+  @media (max-width: 900px) {
+    nav { padding: 1.5rem 2rem; }
+    .nav-links, .nav-reserve { display: none; }
+    .about { grid-template-columns: 1fr; padding: 4rem 2rem; gap: 3rem; }
+    .about-image-wrap { order: -1; }
+    .menu-section, .reserve-section { padding: 4rem 2rem; }
+    .atmosphere { grid-template-columns: 1fr; padding: 2rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; padding: 2rem; }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Ember & Oak</div>
+  <ul class="nav-links">
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#about">Story</a></li>
+    <li><a href="#reserve">Reserve</a></li>
+    <li><a href="#">Events</a></li>
+  </ul>
+  <button class="nav-reserve" onclick="document.getElementById('reserve').scrollIntoView({behavior:'smooth'})">Reserve a Table</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-texture"></div>
+  <div class="hero-line-left"></div>
+  <div class="hero-line-right"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Fine Dining · New York City</div>
+    <h1 class="hero-title">
+      Ember
+      <em>& Oak</em>
+    </h1>
+    <p class="hero-subtitle">Where fire meets forest, and every meal tells a story</p>
+    <div class="hero-cta">
+      <a href="#reserve" class="btn-primary">Reserve a Table</a>
+      <a href="#menu" class="btn-ghost">View Menu</a>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-image-wrap">
+    <div class="about-image">
+      <div class="about-image-placeholder">🍷</div>
+    </div>
+    <div class="about-image-frame"></div>
+    <div class="about-badge">
+      <div class="about-badge-year">12</div>
+      <div class="about-badge-text">Years</div>
+    </div>
+  </div>
+  <div>
+    <div class="section-tag">Our Story</div>
+    <h2 class="about-title">Crafted with<br><em>passion & fire</em></h2>
+    <p class="about-text">Born from a love of open-fire cooking and seasonal ingredients, Ember & Oak has been a cornerstone of New York's culinary landscape since 2012. Every dish on our menu is a conversation between flame and nature.</p>
+    <p class="about-text">Our wood-fired kitchen uses only locally sourced, sustainably grown produce. The menu changes with the seasons, because great food follows nature's rhythm.</p>
+    <div class="about-stats">
+      <div>
+        <div class="stat-num">3</div>
+        <div class="stat-label">Michelin Stars</div>
+      </div>
+      <div>
+        <div class="stat-num">40+</div>
+        <div class="stat-label">Wines on List</div>
+      </div>
+      <div>
+        <div class="stat-num">12</div>
+        <div class="stat-label">Years of Service</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu-section" id="menu">
+  <div class="section-header">
+    <div class="section-tag" style="justify-content:center; margin-bottom:1rem;">
+      <span style="width:30px;height:1px;background:var(--gold);display:block;"></span>
+      Seasonal Menu
+      <span style="width:30px;height:1px;background:var(--gold);display:block;"></span>
+    </div>
+    <h2 class="section-title">A Taste of <em>the Season</em></h2>
+    <p class="section-sub">Autumn — Winter 2025</p>
+  </div>
+
+  <div class="menu-tabs">
+    <button class="menu-tab active">Starters</button>
+    <button class="menu-tab">Mains</button>
+    <button class="menu-tab">Desserts</button>
+    <button class="menu-tab">Drinks</button>
+  </div>
+
+  <div class="menu-grid" id="menuGrid"></div>
+</section>
+
+<!-- ATMOSPHERE -->
+<section class="atmosphere">
+  <div class="atm-block atm-block-accent">
+    <div class="atm-icon">🔥</div>
+    <h3 class="atm-title">Open-Fire Kitchen</h3>
+    <p class="atm-text">Watch our chefs work their magic over live oak and cherry wood flames. The kitchen is the heart of everything we do.</p>
+    <div class="atm-number">01</div>
+  </div>
+  <div class="atm-block">
+    <div class="atm-icon">🌿</div>
+    <h3 class="atm-title">Farm to Table</h3>
+    <p class="atm-text">Every ingredient is sourced within 100 miles. We work with 14 local farms to bring you the freshest produce each season has to offer.</p>
+    <div class="atm-number">02</div>
+  </div>
+  <div class="atm-block atm-block-accent">
+    <div class="atm-icon">🍷</div>
+    <h3 class="atm-title">Curated Wine List</h3>
+    <p class="atm-text">Our sommelier has assembled a collection of over 400 bottles, from rare Burgundies to emerging natural wines from around the world.</p>
+    <div class="atm-number">03</div>
+  </div>
+</section>
+
+<!-- RESERVE -->
+<section class="reserve-section" id="reserve">
+  <div class="section-tag" style="justify-content:center; margin-bottom:1rem;">
+    <span style="width:30px;height:1px;background:var(--gold);display:block;"></span>
+    Reservations
+    <span style="width:30px;height:1px;background:var(--gold);display:block;"></span>
+  </div>
+  <h2 class="section-title">Reserve Your <em>Table</em></h2>
+  <p style="color:var(--muted);margin-top:0.5rem;font-size:0.9rem;">We recommend booking at least 3 days in advance</p>
+  <form class="reserve-form" onsubmit="handleReserve(event)">
+    <input type="text" placeholder="First Name" required>
+    <input type="text" placeholder="Last Name" required>
+    <input type="email" placeholder="Email Address" class="full" required>
+    <input type="date" required>
+    <select>
+      <option value="" disabled selected>Time</option>
+      <option>6:00 PM</option>
+      <option>6:30 PM</option>
+      <option>7:00 PM</option>
+      <option>7:30 PM</option>
+      <option>8:00 PM</option>
+      <option>8:30 PM</option>
+      <option>9:00 PM</option>
+    </select>
+    <select class="full">
+      <option value="" disabled selected>Number of Guests</option>
+      <option>1 Guest</option>
+      <option>2 Guests</option>
+      <option>3 Guests</option>
+      <option>4 Guests</option>
+      <option>5–6 Guests</option>
+      <option>Private Event (7+)</option>
+    </select>
+    <button type="submit" class="reserve-submit">Confirm Reservation</button>
+  </form>
+</section>
+
+<footer>
+  <div class="footer-logo">Ember & Oak</div>
+  <div class="footer-links">
+    <a href="#">Menu</a>
+    <a href="#">About</a>
+    <a href="#">Events</a>
+    <a href="#">Gift Cards</a>
+    <a href="#">Contact</a>
+  </div>
+  <div>© 2025 Ember & Oak. All rights reserved.</div>
+</footer>
+
+<script>
+const menuData = {
+  starters: [
+    { name: "Burrata & Heirloom Tomato", price: "$18", desc: "Fresh burrata, roasted cherry tomatoes, aged balsamic, basil oil", tag: "Vegetarian" },
+    { name: "Wood-Smoked Salmon", price: "$24", desc: "Cold-smoked Scottish salmon, crème fraîche, pickled cucumber, rye crisps", tag: "Chef's Pick" },
+    { name: "Bone Marrow Toast", price: "$22", desc: "Roasted marrow, chimichurri, capers, grilled sourdough", tag: "" },
+    { name: "Autumn Mushroom Soup", price: "$16", desc: "Wild porcini and chanterelle velouté, truffle oil, chive cream", tag: "Seasonal" },
+    { name: "Steak Tartare", price: "$26", desc: "Hand-cut Wagyu, egg yolk, capers, Dijon, toasted brioche", tag: "Signature" },
+    { name: "Oysters on Ice", price: "$32", desc: "Six freshly shucked oysters, mignonette, lemon, hot sauce", tag: "" }
+  ],
+  mains: [
+    { name: "Oak-Fired Ribeye", price: "$68", desc: "28-day dry-aged, 400g, roasted garlic butter, bone marrow jus", tag: "Signature" },
+    { name: "Lamb Rack", price: "$52", desc: "Herb-crusted, pomegranate reduction, root vegetable gratin", tag: "Chef's Pick" },
+    { name: "Wild Halibut", price: "$46", desc: "Pan-seared, saffron beurre blanc, fennel, blood orange salsa", tag: "Seasonal" },
+    { name: "Roasted Duck Breast", price: "$44", desc: "Cherry glaze, parsnip purée, wilted winter greens, crispy skin", tag: "" },
+    { name: "Wild Mushroom Risotto", price: "$34", desc: "Arborio, aged Parmigiano, truffle, porcini, fresh herbs", tag: "Vegetarian" },
+    { name: "Whole Roasted Chicken", price: "$42", desc: "Free-range, preserved lemon, smoked paprika, roasted potatoes", tag: "" }
+  ],
+  desserts: [
+    { name: "Valrhona Chocolate Tart", price: "$14", desc: "Dark chocolate ganache, salted caramel, cocoa crumble, vanilla cream", tag: "Signature" },
+    { name: "Crème Brûlée", price: "$12", desc: "Classic vanilla bean, seasonal berry compote, orange zest", tag: "" },
+    { name: "Tarte Tatin", price: "$13", desc: "Caramelised apple, flaky pastry, calvados cream, cinnamon", tag: "Seasonal" },
+    { name: "Cheese Selection", price: "$22", desc: "Three artisan cheeses, honeycomb, walnut bread, quince paste", tag: "" }
+  ],
+  drinks: [
+    { name: "Oak-Smoked Old Fashioned", price: "$18", desc: "Maker's Mark, smoked maple syrup, Angostura bitters, orange", tag: "House Special" },
+    { name: "Rosé Spritz", price: "$14", desc: "Provence rosé, elderflower liqueur, sparkling water, cucumber", tag: "" },
+    { name: "Barolo 2018, Giacomo Conterno", price: "$95", desc: "Glass pour — bold, earthy, structured. Perfect with red meat", tag: "Sommelier's Pick" },
+    { name: "Non-Alcoholic Negroni", price: "$12", desc: "Seedlip Spice, Lyre's aperitif, tonic, blood orange", tag: "" }
+  ]
+};
+
+function renderMenu(category) {
+  const grid = document.getElementById('menuGrid');
+  const items = menuData[category];
+  grid.innerHTML = items.map(item => `
+    <div class="menu-item">
+      <div class="menu-item-top">
+        <div class="menu-item-name">${item.name}</div>
+        <div class="menu-item-price">${item.price}</div>
+      </div>
+      <div class="menu-item-desc">${item.desc}</div>
+      ${item.tag ? `<span class="menu-item-tag">${item.tag}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+document.querySelectorAll('.menu-tab').forEach((tab, i) => {
+  const cats = ['starters','mains','desserts','drinks'];
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderMenu(cats[i]);
+  });
+});
+
+renderMenu('starters');
+
+function handleReserve(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('.reserve-submit');
+  btn.textContent = '✓ Reservation Confirmed';
+  btn.style.background = '#2d6a4f';
+  btn.style.color = '#fff';
+  setTimeout(() => {
+    btn.textContent = 'Confirm Reservation';
+    btn.style.background = '';
+    btn.style.color = '';
+    e.target.reset();
+  }, 3000);
+}
+</script>
+</body>
+</html>
