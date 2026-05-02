@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <title>Habit Quest</title>
+  <style>
+    :root {
+      --bg: #111111;
+      --card: #1b1b1b;
+      --card-soft: #242424;
+      --text: #f3f3f3;
+      --muted: #a8a8a8;
+      --accent: #ff6b00;
+      --danger: #ff4d4f;
+      --success: #1fbf75;
+      --border: #2d2d2d;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      padding: max(14px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+    }
+
+    .app {
+      max-width: 560px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255, 107, 0, 0.18), rgba(255, 107, 0, 0.03)) var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .level {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .xp {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .xp-bar {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--card-soft);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff8a33, var(--accent));
+      transition: width 240ms ease;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #fff;
+      background: var(--accent);
+      cursor: pointer;
+      transition: transform 110ms ease, filter 160ms ease, opacity 160ms ease;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    button.secondary {
+      background: var(--card-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .habit {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .habit-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .habit-name {
+      font-size: 15px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .streak {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .habit-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .done-btn {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .done-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), transparent 60%);
+      opacity: 0;
+      transform: scale(0.65);
+      transition: opacity 220ms ease, transform 220ms ease;
+      pointer-events: none;
+    }
+
+    .done-btn:active::after {
+      opacity: 1;
+      transform: scale(1.12);
+    }
+
+    .done-btn.done {
+      background: var(--success);
+    }
+
+    .delete-btn {
+      padding: 10px 12px;
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255, 77, 79, 0.35);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .motivation {
+      text-align: center;
+      font-weight: 700;
+      color: #ffb37c;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255, 107, 0, 0.12);
+      border: 1px solid rgba(255, 107, 0, 0.3);
+      display: none;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.62);
+      display: none;
+      place-items: center;
+      z-index: 20;
+      padding: 16px;
+    }
+
+    .modal {
+      width: min(420px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+    }
+
+    .modal h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <div class="top-row">
+        <div class="level" id="levelText">Level 1</div>
+        <div class="xp" id="xpText">0 XP</div>
+      </div>
+      <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+    </section>
+
+    <section class="composer">
+      <input id="habitInput" type="text" maxlength="50" placeholder="Новая привычка..." />
+      <button id="addHabitBtn" type="button">Добавить</button>
+    </section>
+
+    <div class="hint" id="planHint">Free-план: до 5 привычек</div>
+    <div class="motivation" id="motivationText">Всё сделано! 🔥</div>
+
+    <section class="list" id="habitList"></section>
+    <div class="hint" id="emptyText">Добавьте первую привычку и начните серию.</div>
+  </main>
+
+  <div class="modal-backdrop" id="premiumModal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3>Добавь до 20 привычек — Premium 🚀</h3>
+      <p>На бесплатном плане доступно только 5 привычек.</p>
+      <div class="modal-actions">
+        <button class="secondary" id="closeModalBtn" type="button">Позже</button>
+        <button id="premiumBtn" type="button">Узнать больше</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const STORAGE_KEY = "habit_quest_v1";
+    const FREE_HABIT_LIMIT = 5;
+    const XP_PER_CHECKIN = 10;
+    const XP_PER_LEVEL = 100;
+
+    const state = {
+      habits: [],
+      totalXp: 0,
+      lastOpenDate: ""
+    };
+
+    const ui = {
+      levelText: document.getElementById("levelText"),
+      xpText: document.getElementById("xpText"),
+      xpFill: document.getElementById("xpFill"),
+      habitInput: document.getElementById("habitInput"),
+      addHabitBtn: document.getElementById("addHabitBtn"),
+      habitList: document.getElementById("habitList"),
+      emptyText: document.getElementById("emptyText"),
+      motivationText: document.getElementById("motivationText"),
+      premiumModal: document.getElementById("premiumModal"),
+      closeModalBtn: document.getElementById("closeModalBtn"),
+      premiumBtn: document.getElementById("premiumBtn")
+    };
+
+    function applyTelegramTheme() {
+      const tp = tg?.themeParams;
+      if (!tp) return;
+
+      const root = document.documentElement;
+      if (tp.bg_color) root.style.setProperty("--bg", tp.bg_color);
+      if (tp.secondary_bg_color) root.style.setProperty("--card", tp.secondary_bg_color);
+      if (tp.text_color) root.style.setProperty("--text", tp.text_color);
+      if (tp.hint_color) root.style.setProperty("--muted", tp.hint_color);
+      if (tp.button_color) root.style.setProperty("--accent", tp.button_color);
+      if (tp.section_bg_color) root.style.setProperty("--card-soft", tp.section_bg_color);
+      if (tp.bg_color) {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", tp.bg_color);
+      }
+    }
+
+    function getTodayISO() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function getYesterdayISO() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        state.habits = Array.isArray(parsed.habits) ? parsed.habits : [];
+        state.totalXp = Number(parsed.totalXp) || 0;
+        state.lastOpenDate = typeof parsed.lastOpenDate === "string" ? parsed.lastOpenDate : "";
+      } catch (_) {
+        state.habits = [];
+        state.totalXp = 0;
+        state.lastOpenDate = "";
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function runDailyReset() {
+      const today = getTodayISO();
+      if (state.lastOpenDate === today) return;
+
+      state.habits = state.habits.map((habit) => ({
+        ...habit,
+        completedToday: false
+      }));
+      state.lastOpenDate = today;
+      saveState();
+    }
+
+    function getLevel(totalXp) {
+      return Math.floor(totalXp / XP_PER_LEVEL) + 1;
+    }
+
+    function getLevelProgress(totalXp) {
+      return totalXp % XP_PER_LEVEL;
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderTop() {
+      const level = getLevel(state.totalXp);
+      const progress = getLevelProgress(state.totalXp);
+      const percent = Math.min(100, Math.max(0, (progress / XP_PER_LEVEL) * 100));
+      ui.levelText.textContent = `Level ${level}`;
+      ui.xpText.textContent = `${state.totalXp} XP`;
+      ui.xpFill.style.width = `${percent}%`;
+    }
+
+    function renderHabits() {
+      if (state.habits.length === 0) {
+        ui.habitList.innerHTML = "";
+        ui.emptyText.style.display = "block";
+        ui.motivationText.style.display = "none";
+        return;
+      }
+
+      ui.emptyText.style.display = "none";
+      ui.habitList.innerHTML = state.habits
+        .map(
+          (habit) => `
+          <article class="habit">
+            <div class="habit-top">
+              <div class="habit-name">${escapeHtml(habit.name)}</div>
+              <div class="streak">🔥 ${habit.streak || 0} days</div>
+            </div>
+            <div class="habit-actions">
+              <button class="done-btn ${habit.completedToday ? "done" : ""}" data-action="done" data-id="${habit.id}" type="button">
+                ${habit.completedToday ? "Done today (+10 XP)" : "Done today"}
+              </button>
+              <button class="delete-btn" data-action="delete" data-id="${habit.id}" type="button">Удалить</button>
+            </div>
+          </article>
+        `
+        )
+        .join("");
+
+      const allDone = state.habits.length > 0 && state.habits.every((h) => h.completedToday);
+      ui.motivationText.style.display = allDone ? "block" : "none";
+    }
+
+    function render() {
+      renderTop();
+      renderHabits();
+    }
+
+    function addHabit() {
+      const name = ui.habitInput.value.trim();
+      if (!name) return;
+
+      if (state.habits.length >= FREE_HABIT_LIMIT) {
+        openPremiumModal();
+        return;
+      }
+
+      const habit = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        name,
+        streak: 0,
+        completedToday: false,
+        lastCompletedDate: ""
+      };
+      state.habits.unshift(habit);
+      ui.habitInput.value = "";
+      saveState();
+      render();
+    }
+
+    function onDoneToday(habitId) {
+      const today = getTodayISO();
+      const yesterday = getYesterdayISO();
+      const idx = state.habits.findIndex((h) => h.id === habitId);
+      if (idx < 0) return;
+
+      const habit = state.habits[idx];
+      if (habit.completedToday) return;
+
+      const prevDate = habit.lastCompletedDate;
+      let streak = 1;
+      if (prevDate === yesterday) {
+        streak = (habit.streak || 0) + 1;
+      } else if (prevDate === today) {
+        streak = habit.streak || 1;
+      }
+
+      state.habits[idx] = {
+        ...habit,
+        completedToday: true,
+        lastCompletedDate: today,
+        streak
+      };
+      state.totalXp += XP_PER_CHECKIN;
+      saveState();
+      render();
+    }
+
+    function onDeleteHabit(habitId) {
+      state.habits = state.habits.filter((h) => h.id !== habitId);
+      saveState();
+      render();
+    }
+
+    function openPremiumModal() {
+      ui.premiumModal.style.display = "grid";
+    }
+
+    function closePremiumModal() {
+      ui.premiumModal.style.display = "none";
+    }
+
+    function showPremiumOffer() {}
+
+    function bindEvents() {
+      ui.addHabitBtn.addEventListener("click", addHabit);
+      ui.habitInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") addHabit();
+      });
+
+      ui.habitList.addEventListener("click", (event) => {
+        const btn = event.target.closest("button");
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+        const habitId = btn.dataset.id;
+        if (!habitId) return;
+
+        if (action === "done") onDoneToday(habitId);
+        if (action === "delete") onDeleteHabit(habitId);
+      });
+
+      ui.closeModalBtn.addEventListener("click", closePremiumModal);
+      ui.premiumBtn.addEventListener("click", () => {
+        showPremiumOffer();
+        closePremiumModal();
+      });
+      ui.premiumModal.addEventListener("click", (event) => {
+        if (event.target === ui.premiumModal) closePremiumModal();
+      });
+    }
+
+    function init() {
+      applyTelegramTheme();
+      loadState();
+      runDailyReset();
+      bindEvents();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
